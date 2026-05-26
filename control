@@ -1,7 +1,7 @@
 Package: com.mikey820.audiomix
 Name: AudioMix
-Version: 1.0.0
-Architecture: iphoneos-arm64e
+Version: 1.1.0
+Architecture: iphoneos-arm64
 Description: Prevent apps (e.g. Roblox) from pausing your background music
 Maintainer: mikey820 <mikey820@users.noreply.github.com>
 Author: mikey820

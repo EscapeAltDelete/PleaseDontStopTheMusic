@@ -32,6 +32,15 @@ jobs:
       - name: Build all variants
         run: make clean all
 
+      - name: Debug jailed build
+        run: |
+          echo "=== jailed dir ==="
+          ls -la jailed/ 2>/dev/null || echo "EMPTY"
+          echo "=== jailed/.theos ==="
+          find jailed/.theos -type f 2>/dev/null || echo "NO .theos"
+          echo "=== top .theos ==="
+          find .theos -type f -name "*.dylib" 2>/dev/null || echo "NO root .theos dylib"
+
       - name: Collect artifacts
         run: |
           mkdir -p artifacts

@@ -1,5 +1,30 @@
 #import <AVFoundation/AVFoundation.h>
+#import <Foundation/Foundation.h>
+#define LOG_FILE @"/var/mobile/Library/Logs/PleaseDontStopTheMusic.log"
 
+// Logging function that writes timestamped messages to file
+static void LogToFile(NSString *format, ...) {
+    va_list args;
+    va_start(args, format);
+    NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+    va_end(args);
+    
+    NSDate *now = [NSDate date];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd HH:mm:ss.SSS"];
+    NSString *timestamp = [formatter stringFromDate:now];
+    
+    NSString *logEntry = [NSString stringWithFormat:@"[%@] %@\n", timestamp, message];
+    
+    FILE *file = fopen([LOG_FILE UTF8String], "a");
+    if (file) {
+        fputs([logEntry UTF8String], file);
+        fclose(file);
+    }
+    
+    // Also log to system log for debugging
+    NSLog(@"[PleaseDontStopTheMusic] %@", message);
+}
 // PleaseDontStopTheMusic
 //
 // Goal: let a second app (TikTok, a game, etc.) play audio WITHOUT pausing the
@@ -24,6 +49,7 @@
 
 // Older convenience setter (category only).
 - (BOOL)setCategory:(NSString *)category error:(NSError **)outError {
+    LogToFile(@"setCategory:error: called with category='%@', isOtherAudioPlaying=%@", category, self.isOtherAudioPlaying ? @"YES" : @"NO");
     if (self.isOtherAudioPlaying) {
         if ([category isEqualToString:AVAudioSessionCategorySoloAmbient]) {
             // SoloAmbient cannot mix; Ambient is the mixable equivalent.
@@ -42,6 +68,7 @@
 }
 
 - (BOOL)setCategory:(NSString *)category mode:(NSString *)mode options:(AVAudioSessionCategoryOptions)options error:(NSError **)outError {
+    LogToFile(@"setCategory:mode:options:error: called with category='%@', mode='%@', options=0x%lx, isOtherAudioPlaying=%@", category, mode, (unsigned long)options, self.isOtherAudioPlaying ? @"YES" : @"NO");
     if (self.isOtherAudioPlaying) {
         if ([category isEqualToString:AVAudioSessionCategorySoloAmbient]) {
             category = AVAudioSessionCategoryAmbient;
@@ -55,6 +82,7 @@
 // and it was previously unhooked — which is why they interrupted background
 // audio. Hooking it here is the core fix for the "audio stops" bug.
 - (BOOL)setCategory:(NSString *)category mode:(NSString *)mode routeSharingPolicy:(AVAudioSessionRouteSharingPolicy)policy options:(AVAudioSessionCategoryOptions)options error:(NSError **)outError {
+    LogToFile(@"setCategory:mode:routeSharingPolicy:options:error: called with category='%@', mode='%@', policy=%ld, options=0x%lx, isOtherAudioPlaying=%@", category, mode, (long)policy, (unsigned long)options, self.isOtherAudioPlaying ? @"YES" : @"NO");
     if (self.isOtherAudioPlaying) {
         if ([category isEqualToString:AVAudioSessionCategorySoloAmbient]) {
             category = AVAudioSessionCategoryAmbient;
@@ -65,6 +93,7 @@
 }
 
 - (BOOL)setCategory:(NSString *)category withOptions:(AVAudioSessionCategoryOptions)options error:(NSError **)outError {
+    LogToFile(@"setCategory:withOptions:error: called with category='%@', options=0x%lx, isOtherAudioPlaying=%@", category, (unsigned long)options, self.isOtherAudioPlaying ? @"YES" : @"NO");
     if (self.isOtherAudioPlaying) {
         if ([category isEqualToString:AVAudioSessionCategorySoloAmbient]) {
             category = AVAudioSessionCategoryAmbient;
@@ -79,6 +108,7 @@
 // audio is playing and we are about to activate a non-mixing interrupting
 // session, re-apply the category with MixWithOthers so we don't cut it off.
 - (BOOL)setActive:(BOOL)active error:(NSError **)outError {
+    LogToFile(@"setActive:error: called with active=%@, isOtherAudioPlaying=%@, currentCategory='%@', categoryOptions=0x%lx", active ? @"YES" : @"NO", self.isOtherAudioPlaying ? @"YES" : @"NO", self.category, (unsigned long)self.categoryOptions);
     if (active && self.isOtherAudioPlaying
         && !(self.categoryOptions & AVAudioSessionCategoryOptionMixWithOthers)) {
         NSString *cat = self.category;
@@ -94,6 +124,7 @@
 }
 
 - (BOOL)setActive:(BOOL)active withOptions:(AVAudioSessionSetActiveOptions)options error:(NSError **)outError {
+    LogToFile(@"setActive:withOptions:error: called with active=%@, options=0x%lx, isOtherAudioPlaying=%@, currentCategory='%@', categoryOptions=0x%lx", active ? @"YES" : @"NO", (unsigned long)options, self.isOtherAudioPlaying ? @"YES" : @"NO", self.category, (unsigned long)self.categoryOptions);
     if (active && self.isOtherAudioPlaying
         && !(self.categoryOptions & AVAudioSessionCategoryOptionMixWithOthers)) {
         NSString *cat = self.category;
@@ -112,4 +143,5 @@
 
 %ctor {
     NSLog(@"[PleaseDontStopTheMusic] loaded");
+    LogToFile(@"PleaseDontStopTheMusic tweak initialized at startup");
 }

@@ -300,7 +300,7 @@ static void LogToFile(NSString *format, ...) {
 %end
 
 %ctor {
-    NSLog(@"[PleaseDontStopTheMusic] %ctor() STARTING initialization");
+    NSLog(@"[PleaseDontStopTheMusic] %%ctor() STARTING initialization");
     
     // Create and initialize the log file immediately with a header
     NSLog(@"[PleaseDontStopTheMusic] Creating log file at: %@", LOG_FILE);
@@ -350,5 +350,5 @@ static void LogToFile(NSString *format, ...) {
     LogToFile(@"========== TWEAK INITIALIZATION COMPLETE ==========");
     LogToFile(@"");
     
-    NSLog(@"[PleaseDontStopTheMusic] %ctor() COMPLETED - tweak is now active");
+    NSLog(@"[PleaseDontStopTheMusic] %%ctor() COMPLETED - tweak is now active");
 }
